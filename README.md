@@ -30,13 +30,13 @@ Windows port uses following third-party code:
 
   http://stackoverflow.com/questions/355967/how-to-use-msvc-intrinsics-to-get-the-equivalent-of-this-gcc-code
 
-  win\include\builtins_msvc.h
+    win\include\builtins_msvc.h
   
 
 * C9x conformant stdint.h http://code.google.com/p/msinttypes/
 
-  win\include\inttypes.h
-  win\include\stdint.h
+    win\include\inttypes.h
+    win\include\stdint.h
 
 
 
