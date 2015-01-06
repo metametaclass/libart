@@ -1,4 +1,4 @@
-libart [![Build Status](https://travis-ci.org/armon/libart.png)](https://travis-ci.org/armon/libart)
+libart
 =========
 
 This library provides a C99 implementation of the Adaptive Radix
@@ -17,7 +17,7 @@ As a radix tree, it provides the following:
  * Prefix based iteration
 
 
-Usage (windows)
+## Usage (windows)
 
 -------
 
@@ -26,21 +26,21 @@ Usage (windows)
 
 
 Windows port uses following third-party code:
-
 * __builtin_clz, __builtin_ctz replacement 
 
-stackoverflow.com/questions/355967/how-to-use-msvc-intrinsics-to-get-the-equivalent-of-this-gcc-code
+  http://stackoverflow.com/questions/355967/how-to-use-msvc-intrinsics-to-get-the-equivalent-of-this-gcc-code
 
   win\include\builtins_msvc.h
   
 
 * C9x conformant stdint.h http://code.google.com/p/msinttypes/
+
   win\include\inttypes.h
   win\include\stdint.h
 
 
 
-Usage (*nix, possibly broken, use original version)
+## Usage (*nix, possibly broken, use original version)
 
 -------
 
@@ -57,7 +57,8 @@ To build the test code successfully, do the following::
     $ ./test_runner
 
 
-References
+## References
+
 ----------
 
 Related works:
