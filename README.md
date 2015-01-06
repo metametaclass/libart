@@ -17,7 +17,29 @@ As a radix tree, it provides the following:
  * Prefix based iteration
 
 
-Usage
+Usage (windows)
+
+-------
+ * Open win\art.sln solution in Visual Studio 2010 or later
+ * Run win\Debug\art_tests.exe (asserts on errors)
+
+
+Windows port uses following third-party code:
+
+* __builtin_clz, __builtin_ctz replacement 
+
+stackoverflow.com/questions/355967/how-to-use-msvc-intrinsics-to-get-the-equivalent-of-this-gcc-code
+
+  win\include\builtins_msvc.h
+  
+
+* C9x conformant stdint.h http://code.google.com/p/msinttypes/
+  win\include\inttypes.h
+  win\include\stdint.h
+
+
+
+Usage (*nix, possibly broken, use original version)
 -------
 
 Building the test code will generate errors if libcheck is not available.
