@@ -3,9 +3,20 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef _MSC_VER
+#include "art_tests/check.h"
+#else
 #include <check.h>
+#endif
 
 #include "art.h"
+
+FILE* fopen_check(char *name, char *mode)
+{
+    FILE* f = fopen(name, mode);
+    assert(f);
+    return f;
+}
 
 START_TEST(test_art_init_and_destroy)
 {
@@ -23,14 +34,17 @@ END_TEST
 START_TEST(test_art_insert)
 {
     art_tree t;
+    int len;
+    char buf[512];
+    FILE *f;
+    uintptr_t line;
     int res = init_art_tree(&t);
     fail_unless(res == 0);
 
-    int len;
-    char buf[512];
-    FILE *f = fopen("tests/words.txt", "r");
 
-    uintptr_t line = 1;
+    f = fopen_check("tests/words.txt", "r");
+
+    line = 1;
     while (fgets(buf, sizeof buf, f)) {
         len = strlen(buf);
         buf[len-1] = '\0';
@@ -47,8 +61,6 @@ END_TEST
 START_TEST(test_art_insert_verylong)
 {
     art_tree t;
-    int res = init_art_tree(&t);
-    fail_unless(res == 0);
 
     unsigned char key1[300] = {16,0,0,0,7,10,0,0,0,2,17,10,0,0,0,120,10,0,0,0,120,10,0,
       0,0,216,10,0,0,0,202,10,0,0,0,194,10,0,0,0,224,10,0,0,0,
@@ -87,6 +99,8 @@ START_TEST(test_art_insert_verylong)
       101,178,0,8,18,255,255,255,219,191,198,134,5,208,212,72,
       44,208,250,180,14,1,0,0,8, '\0'};
 
+    int res = init_art_tree(&t);
+    fail_unless(res == 0);
 
     fail_unless(NULL == art_insert(&t, key1, 299, (void*)key1));
     fail_unless(NULL == art_insert(&t, key2, 302, (void*)key2));
@@ -101,14 +115,21 @@ END_TEST
 START_TEST(test_art_insert_search)
 {
     art_tree t;
-    int res = init_art_tree(&t);
-    fail_unless(res == 0);
-
+    art_leaf *l;
     int len;
     char buf[512];
-    FILE *f = fopen("tests/words.txt", "r");
+    FILE *f;
+    int res;
+    uintptr_t line;
+    uintptr_t val;
+        
+    res = init_art_tree(&t);
+    fail_unless(res == 0);
 
-    uintptr_t line = 1;
+
+    f = fopen_check("tests/words.txt", "r");
+
+    line = 1;
     while (fgets(buf, sizeof buf, f)) {
         len = strlen(buf);
         buf[len-1] = '\0';
@@ -126,14 +147,13 @@ START_TEST(test_art_insert_search)
         len = strlen(buf);
         buf[len-1] = '\0';
 
-        uintptr_t val = (uintptr_t)art_search(&t, (unsigned char*)buf, len);
-	fail_unless(line == val, "Line: %d Val: %" PRIuPTR " Str: %s\n", line,
-	    val, buf);
+        val = (uintptr_t)art_search(&t, (unsigned char*)buf, len);
+	    fail_unless(line == val, "Line: %d Val: %" PRIuPTR " Str: %s\n", line,val, buf);
         line++;
     }
 
     // Check the minimum
-    art_leaf *l = art_minimum(&t);
+    l = art_minimum(&t);
     fail_unless(l && strcmp((char*)l->key, "A") == 0);
 
     // Check the maximum
@@ -148,14 +168,20 @@ END_TEST
 START_TEST(test_art_insert_delete)
 {
     art_tree t;
-    int res = init_art_tree(&t);
-    fail_unless(res == 0);
-
     int len;
     char buf[512];
-    FILE *f = fopen("tests/words.txt", "r");
+    FILE *f;
+    int res;
+    uintptr_t line,nlines;
+    uintptr_t val;
 
-    uintptr_t line = 1, nlines;
+    res = init_art_tree(&t);
+    fail_unless(res == 0);
+
+
+    f = fopen_check("tests/words.txt", "r");
+
+    line = 1;
     while (fgets(buf, sizeof buf, f)) {
         len = strlen(buf);
         buf[len-1] = '\0';
@@ -177,14 +203,12 @@ START_TEST(test_art_insert_delete)
 
         // Search first, ensure all entries still
         // visible
-        uintptr_t val = (uintptr_t)art_search(&t, (unsigned char*)buf, len);
-	fail_unless(line == val, "Line: %d Val: %" PRIuPTR " Str: %s\n", line,
-	    val, buf);
+        val = (uintptr_t)art_search(&t, (unsigned char*)buf, len);
+	    fail_unless(line == val, "Line: %d Val: %" PRIuPTR " Str: %s\n", line, val, buf);
 
         // Delete, should get lineno back
         val = (uintptr_t)art_delete(&t, (unsigned char*)buf, len);
-	fail_unless(line == val, "Line: %d Val: %" PRIuPTR " Str: %s\n", line,
-	    val, buf);
+	    fail_unless(line == val, "Line: %d Val: %" PRIuPTR " Str: %s\n", line, val, buf);
 
         // Check the size
         fail_unless(art_size(&t) == nlines - line);
@@ -212,15 +236,20 @@ int iter_cb(void *data, const unsigned char* key, uint32_t key_len, void *val) {
 START_TEST(test_art_insert_iter)
 {
     art_tree t;
-    int res = init_art_tree(&t);
-    fail_unless(res == 0);
-
+    int res;   
     int len;
     char buf[512];
-    FILE *f = fopen("tests/words.txt", "r");
+    uint64_t out[] = {0, 0};
+    FILE *f;
+    uintptr_t line, nlines;
+    uint64_t xor_mask;
 
-    uint64_t xor_mask = 0;
-    uintptr_t line = 1, nlines;
+    res = init_art_tree(&t);
+    fail_unless(res == 0);
+    f = fopen_check("tests/words.txt", "r");
+
+    xor_mask = 0;
+    line = 1;
     while (fgets(buf, sizeof buf, f)) {
         len = strlen(buf);
         buf[len-1] = '\0';
@@ -232,7 +261,7 @@ START_TEST(test_art_insert_iter)
     }
     nlines = line - 1;
 
-    uint64_t out[] = {0, 0};
+    
     fail_unless(art_iter(&t, iter_cb, &out) == 0);
 
     fail_unless(out[0] == nlines);
@@ -262,10 +291,13 @@ static int test_prefix_cb(void *data, const unsigned char *k, uint32_t k_len, vo
 START_TEST(test_art_iter_prefix)
 {
     art_tree t;
+    char *expected2[] = {"abc.123.456", "api", "api.foe.fum", "api.foo", "api.foo.bar", "api.foo.baz"};
+    char *s;
     int res = init_art_tree(&t);
+
     fail_unless(res == 0);
 
-    char *s = "api.foo.bar";
+    s = "api.foo.bar";
     fail_unless(NULL == art_insert(&t, (unsigned char*)s, strlen(s)+1, NULL));
 
     s = "api.foo.baz";
@@ -284,43 +316,57 @@ START_TEST(test_art_iter_prefix)
     fail_unless(NULL == art_insert(&t, (unsigned char*)s, strlen(s)+1, NULL));
 
     // Iterate over api
+    {
     char *expected[] = {"api", "api.foe.fum", "api.foo", "api.foo.bar", "api.foo.baz"};
     prefix_data p = { 0, 5, expected };
     fail_unless(!art_iter_prefix(&t, (unsigned char*)"api", 3, test_prefix_cb, &p));
     fail_unless(p.count == p.max_count, "Count: %d Max: %d", p.count, p.max_count);
+    }
 
     // Iterate over 'a'
-    char *expected2[] = {"abc.123.456", "api", "api.foe.fum", "api.foo", "api.foo.bar", "api.foo.baz"};
+    {
+    
     prefix_data p2 = { 0, 6, expected2 };
     fail_unless(!art_iter_prefix(&t, (unsigned char*)"a", 1, test_prefix_cb, &p2));
     fail_unless(p2.count == p2.max_count);
+    }
 
     // Check a failed iteration
+    {
     prefix_data p3 = { 0, 0, NULL };
     fail_unless(!art_iter_prefix(&t, (unsigned char*)"b", 1, test_prefix_cb, &p3));
     fail_unless(p3.count == 0);
+    }
 
     // Iterate over api.
+    {
     char *expected4[] = {"api.foe.fum", "api.foo", "api.foo.bar", "api.foo.baz"};
     prefix_data p4 = { 0, 4, expected4 };
     fail_unless(!art_iter_prefix(&t, (unsigned char*)"api.", 4, test_prefix_cb, &p4));
     fail_unless(p4.count == p4.max_count, "Count: %d Max: %d", p4.count, p4.max_count);
+    }
 
     // Iterate over api.foo.ba
+    {
     char *expected5[] = {"api.foo.bar"};
     prefix_data p5 = { 0, 1, expected5 };
     fail_unless(!art_iter_prefix(&t, (unsigned char*)"api.foo.bar", 11, test_prefix_cb, &p5));
     fail_unless(p5.count == p5.max_count, "Count: %d Max: %d", p5.count, p5.max_count);
+    }
 
     // Check a failed iteration on api.end
+    {
     prefix_data p6 = { 0, 0, NULL };
     fail_unless(!art_iter_prefix(&t, (unsigned char*)"api.end", 7, test_prefix_cb, &p6));
     fail_unless(p6.count == 0);
+    }
 
     // Iterate over empty prefix
+    {
     prefix_data p7 = { 0, 6, expected2 };
     fail_unless(!art_iter_prefix(&t, (unsigned char*)"", 0, test_prefix_cb, &p7));
     fail_unless(p7.count == p7.max_count);
+    }
 
     res = destroy_art_tree(&t);
     fail_unless(res == 0);
@@ -331,10 +377,10 @@ START_TEST(test_art_long_prefix)
 {
     art_tree t;
     int res = init_art_tree(&t);
-    fail_unless(res == 0);
-
     uintptr_t v;
     char *s;
+
+    fail_unless(res == 0);
 
     s = "this:key:has:a:long:prefix:3";
     v = 3;
@@ -359,6 +405,7 @@ START_TEST(test_art_long_prefix)
     fail_unless(3 == (uintptr_t)art_search(&t, (unsigned char*)s, strlen(s)+1));
 
 
+    {
     char *expected[] = {
         "this:key:has:a:long:common:prefix:1",
         "this:key:has:a:long:common:prefix:2",
@@ -367,6 +414,7 @@ START_TEST(test_art_long_prefix)
     prefix_data p = { 0, 3, expected };
     fail_unless(!art_iter_prefix(&t, (unsigned char*)"this:key:has", 12, test_prefix_cb, &p));
     fail_unless(p.count == p.max_count, "Count: %d Max: %d", p.count, p.max_count);
+    }
 
     res = destroy_art_tree(&t);
     fail_unless(res == 0);
@@ -377,13 +425,17 @@ START_TEST(test_art_insert_search_uuid)
 {
     art_tree t;
     int res = init_art_tree(&t);
-    fail_unless(res == 0);
-
     int len;
     char buf[512];
-    FILE *f = fopen("tests/uuid.txt", "r");
+    FILE *f;
+    art_leaf *l;
+    uintptr_t line;
+    uintptr_t val;
 
-    uintptr_t line = 1;
+    fail_unless(res == 0);
+    f = fopen_check("tests/uuid.txt", "r");
+
+    line = 1;
     while (fgets(buf, sizeof buf, f)) {
         len = strlen(buf);
         buf[len-1] = '\0';
@@ -401,14 +453,13 @@ START_TEST(test_art_insert_search_uuid)
         len = strlen(buf);
         buf[len-1] = '\0';
 
-        uintptr_t val = (uintptr_t)art_search(&t, (unsigned char*)buf, len);
-	fail_unless(line == val, "Line: %d Val: %" PRIuPTR " Str: %s\n", line,
-	    val, buf);
+        val = (uintptr_t)art_search(&t, (unsigned char*)buf, len);
+	    fail_unless(line == val, "Line: %d Val: %" PRIuPTR " Str: %s\n", line, val, buf);
         line++;
     }
 
     // Check the minimum
-    art_leaf *l = art_minimum(&t);
+    l = art_minimum(&t);
     fail_unless(l && strcmp((char*)l->key, "00026bda-e0ea-4cda-8245-522764e9f325") == 0);
 
     // Check the maximum

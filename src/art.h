@@ -20,6 +20,14 @@
 # endif
 #endif
 
+
+#ifdef _MSC_VER
+#define INLINE __inline
+//#define inline __inline
+#else
+#define INLINE inline
+#endif
+
 typedef int(*art_callback)(void *data, const unsigned char *key, uint32_t key_len, void *value);
 
 /**
@@ -105,7 +113,7 @@ int destroy_art_tree(art_tree *t);
 #ifdef BROKEN_GCC_C99_INLINE
 # define art_size(t) ((t)->size)
 #else
-inline uint64_t art_size(art_tree *t) {
+INLINE uint64_t art_size(art_tree *t) {
     return t->size;
 }
 #endif

@@ -1,10 +1,11 @@
 
-#include "stdafx.h"
-
+#include <stdio.h>
+#include <tchar.h>
 #include <crtdbg.h>
 #include <windows.h>
 
-#include "art/art.h"
+
+#include "art.h"
 
 #include "check.h"
 #include "test_art.h"

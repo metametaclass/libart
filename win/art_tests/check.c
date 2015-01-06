@@ -1,4 +1,5 @@
-#include "stdafx.h"
+
+#include <stdio.h>
 #include <stdarg.h>
 
 void _fail_unless (int result, const char *file, int line, const char *expr, ...)
