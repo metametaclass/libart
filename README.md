@@ -20,6 +20,7 @@ As a radix tree, it provides the following:
 Usage (windows)
 
 -------
+
  * Open win\art.sln solution in Visual Studio 2010 or later
  * Run win\Debug\art_tests.exe (asserts on errors)
 
@@ -40,6 +41,7 @@ stackoverflow.com/questions/355967/how-to-use-msvc-intrinsics-to-get-the-equival
 
 
 Usage (*nix, possibly broken, use original version)
+
 -------
 
 Building the test code will generate errors if libcheck is not available.
